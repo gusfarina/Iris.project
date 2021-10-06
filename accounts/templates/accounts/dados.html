@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div>
+    <table class="table table-success ">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Username</th>
+            <th>Phone</th>
+            <th>Email</th>
+            <th>Country</th>
+            <th>Category</th>
+            <th>Pdf</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for usuario in usuarios %}
+        <tr>
+            <td>
+                <a href="#">{{ usuario.id }}</a>
+            </td>
+            <td>{{ usuario.firstname }}</td>
+            <td>{{ usuario.username }}</td>
+            <td>{{ usuario.phone }}</td>
+            <td>{{ usuario.email }}</td>
+            <td>{{ usuario.country }}</td>
+            <td>{{ usuario.category }}</td>
+            <td>
+                <button class="btn btn-dark" type="submit">Download</button>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
