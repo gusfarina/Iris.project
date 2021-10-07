@@ -66,6 +66,68 @@ def text_preprocessing(content):
     return WordFeatures
 
 
+# def resume_filter(predictions_result, keyword, id, extracted_folder):
+#     filtered_resumes = []
+#     for pred_json in predictions_result:
+#         result = json.loads(pred_json)
+#         if keyword == result['cargo']:
+#             filtered_resumes.append(pred_json)
+#
+#     # Cria novo zip contendo apenas os curriculos filtrados
+#     dir_name = Path(os.path.join("temp", "{}_filtered".format(id)))
+#     dir_name.mkdir(parents=True, exist_ok=True)
+#
+#     file_path = os.path.join("temp", "{}_filtered".format(id), "filtered_resumes_{}.zip".format(id))
+#
+#     array_novo_de_corno = []
+#     with ZipFile(file_path, 'w') as zipObj:
+#         for result_json in filtered_resumes:
+#             result = json.loads(result_json)
+#
+#             for file in os.listdir(extracted_folder):
+#                 if file == result['curriculo']:
+#                     # Parsing pdf file to string
+#                     raw = parser.from_file(r"{}/{}".format(extracted_folder, file))
+#
+#                     # Getting the RAW pdf content
+#                     content = raw['content']
+#
+#                     # Getting the NAME from raw text
+#                     name = raw["metadata"].get("title", None) or raw["metadata"]["Author"]  or raw["content"].strip().split()[0]
+#
+#                     # Getting the EMAIL from raw text
+#                     email_matches = re.findall(r'[\w\.-]+@[\w\.-]+', raw["content"].strip())
+#                     for i in email_matches:
+#                         email = i
+#
+#                     # Getting the PHONE number from raw text
+#                     phone_matches = re.findall(r"\(?\d{2,}\)?[ -]?\d{4,}[\-\s]?\d{4}", raw["content"].strip())
+#                     for i in phone_matches:
+#                         phone = i
+#
+#                     result['candidato'].append({
+#                         'nome' : name,
+#                         'email' : email,
+#                         'phone' : phone
+#                     })
+#
+#                     # result['nome'] = name
+#                     # result['email'] = email
+#                     # result['telefone'] = phone
+#
+#                     file_path = os.path.join(extracted_folder, file)
+#                     # print("{}/{}".format(extracted_folder, file))
+#                     # with open("{}/{}".format(extracted_folder, file), 'rb') as file_content:
+#                     #     zipped_file.write(file_content.read())
+#                     zipObj.write(file_path)
+#             result_json = json.dumps(result)
+#             array_novo_de_corno.append(result_json)
+#             print(f'array_novo_de_corno = {array_novo_de_corno}')
+#
+#     # return file_path, filtered_resumes
+#     return file_path, array_novo_de_corno
+
+
 def resume_filter_UPDATED(predictions_result, keyword, id, extracted_folder):
     filtered_resumes = []
     for pred_json in predictions_result:

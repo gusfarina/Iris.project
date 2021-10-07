@@ -91,13 +91,13 @@ print('Accuracy of KNeighbors Classifier on training set: {:.2f}'.format(clf.sco
 print('Accuracy of KNeighbors Classifier on test set: {:.2f}'.format(clf.score(X_test, y_test)))
 print("\n Classification report for classifier %s:\n%s\n" % (clf, metrics.classification_report(y_test, prediction)))
 
-# print("Organizing the results...")
-# predictions_result = []
-# for index in range(len(prediction)):
-#     for category in unique_category_num:
-#         category = category.split('-')
-#         if int(category[1]) == int(prediction[index]):
-#             predictions_result.append(("Item - " + str(index), "Category - " + str(category[0])))
+print("Organizing the results...")
+predictions_result = []
+for index in range(len(prediction)):
+    for category in unique_category_num:
+        category = category.split('-')
+        if int(category[1]) == int(prediction[index]):
+            predictions_result.append(("Item - " + str(index), "Category - " + str(category[0])))
 
 print("Saving the model to the DB...")
 settings.configure(DATABASES={
