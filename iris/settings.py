@@ -74,6 +74,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'iris.wsgi.application'
 
+
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 

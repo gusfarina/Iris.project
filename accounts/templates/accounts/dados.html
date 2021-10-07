@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-
+{%block title%} usuarios registrados {%endblock%}
 {% block content %}
 <div>
     <table class="table table-success ">
@@ -11,8 +11,6 @@
             <th>Phone</th>
             <th>Email</th>
             <th>Country</th>
-            <th>Category</th>
-            <th>Pdf</th>
         </tr>
         </thead>
         <tbody>
@@ -26,10 +24,6 @@
             <td>{{ usuario.phone }}</td>
             <td>{{ usuario.email }}</td>
             <td>{{ usuario.country }}</td>
-            <td>{{ usuario.category }}</td>
-            <td>
-                <button class="btn btn-dark" type="submit">Download</button>
-            </td>
         </tr>
         {% endfor %}
         </tbody>

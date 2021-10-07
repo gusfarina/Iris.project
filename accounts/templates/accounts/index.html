@@ -25,6 +25,7 @@
 <body id="kt_body"
       class="quick-panel-right demo-panel-right offcanvas-right header-fixed header-mobile-fixed subheader-enabled aside-enabled aside-static page-loading">
 <!--begin::Main-->
+{%  include 'partial/_messages.html' %}
 <div class="d-flex flex-column flex-root">
     <!--begin::Login-->
     <div class="login login-1 login-signin-on d-flex flex-column flex-lg-row flex-column-fluid bg-white" id="kt_login">
@@ -48,6 +49,7 @@
             <!--end::Aside Bottom-->
         </div>
         <!--begin::Aside-->
+
         <!--begin::Content-->
         <div class="login-content flex-row-fluid d-flex flex-column justify-content-center position-relative overflow-hidden p-7 mx-auto">
             <!--begin::Content body-->
@@ -76,9 +78,9 @@
                         <div class="form-group">
                             <div class="d-flex justify-content-between mt-n5">
                                 <label class="font-size-h6 font-weight-bolder text-dark pt-5">Password</label>
-                                <a href="javascript:;"
-                                   class="text-primary font-size-h6 font-weight-bolder text-hover-primary pt-5"
-                                   id="kt_login_forgot">Forgot password?</a>
+<!--                                <a href="javascript:;"-->
+<!--                                   class="text-primary font-size-h6 font-weight-bolder text-hover-primary pt-5"-->
+<!--                                   id="kt_login_forgot">Forgot password?</a>-->
                             </div>
                             <input class="form-control form-control-solid h-auto py-7 px-6 rounded-lg" type="password"
                                    name="psw" required/>

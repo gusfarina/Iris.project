@@ -1,5 +1,5 @@
 {%extends 'base.html'%}
-{%block title%} Home {%endblock%}
+{%block title%} Profile {%endblock%}
 {% block content %}
 <div class=" container ">
     <!--begin::Card-->
@@ -75,6 +75,7 @@
                                     </div>
                                 </div>
                                 <!--end::Row-->
+                                {% if  request.session.user.avatar %}
                                 <!--begin::Group-->
                                 <div class="form-group row">
                                     <label class="col-form-label col-3 text-lg-right text-left">Avatar</label>
@@ -107,6 +108,40 @@
                                     </div>
                                 </div>
                                 <!--end::Group-->
+                                {% else %}
+                                <!--begin::Group-->
+                                <div class="form-group row">
+                                    <label class="col-form-label col-3 text-lg-right text-left">Avatar</label>
+                                    <div class="col-9">
+                                        <div class="image-input image-input-empty image-input-outline"
+                                             id="kt_user_edit_avatar"
+                                             style="background-image: url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSqXtvNhBnByrBTc39rEnIBoJ-gZe8g7zt7SMOZsFLgwGQD3NdW&s')">
+                                            <div class="image-input-wrapper"></div>
+
+                                            <label class="btn btn-xs btn-icon btn-circle btn-white btn-hover-text-primary btn-shadow"
+                                                   data-action="change" data-toggle="tooltip" title=""
+                                                   data-original-title="Change avatar">
+                                                <i class="fa fa-pen icon-sm text-muted"></i>
+                                                <input type="file" name="profile_avatar" accept=".png, .jpg, .jpeg">
+                                                <input type="hidden" name="profile_avatar_remove">
+                                            </label>
+
+                                            <span class="btn btn-xs btn-icon btn-circle btn-white btn-hover-text-primary btn-shadow"
+                                                  data-action="cancel" data-toggle="tooltip" title=""
+                                                  data-original-title="Cancel avatar">
+                                            <i class="ki ki-bold-close icon-xs text-muted"></i>
+                                        </span>
+
+                                            <span class="btn btn-xs btn-icon btn-circle btn-white btn-hover-text-primary btn-shadow"
+                                                  data-action="remove" data-toggle="tooltip" title=""
+                                                  data-original-title="Remove avatar">
+                                            <i class="ki ki-bold-close icon-xs text-muted"></i>
+                                        </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!--end::Group-->
+                                {% endif %}
                                 <!--begin::Group-->
                                 <div class="form-group row">
                                     <label class="col-form-label col-3 text-lg-right text-left">First Name</label>
@@ -130,7 +165,7 @@
                                     <label class="col-form-label col-3 text-lg-right text-left">Username</label>
                                     <div class="col-9">
                                         <input class="form-control form-control-lg form-control-solid" type="text"
-                                               value="{{ request.session.user.username }}">
+                                               value="{{ request.session.user.username }}" >
                                     </div>
                                 </div>
                                 <!--end::Group-->

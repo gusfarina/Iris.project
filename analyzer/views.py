@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from django.http import HttpResponse, HttpResponseRedirect, HttpResponsePermanentRedirect
+from django.http import HttpResponse, HttpResponseRedirect, FileResponse
 from django.views import generic
 from django.core.files.storage import FileSystemStorage
 import os
@@ -11,6 +11,24 @@ from pathlib import Path
 import shutil
 from django.template import loader
 from .models import Data, Analyzer
+
+
+def download_file(request):
+    user_id = request.session['user_key']
+    file_path = os.path.join("uploads", "zips", "{}_user_zip".format(user_id), "resumes{}.zip".format(user_id))
+
+    # zipped_file = open(file_path, "wb")
+    # to_file = file
+    # zipped_file.write(to_file)
+    # zipped_file.close()
+
+    filename = "{}_download.zip".format(user_id)
+    fl = open(file_path, 'rb')
+
+    # Clear "temp" dir
+    clear_temp_dir()
+
+    return FileResponse(fl, as_attachment=True, filename=filename)
 
 
 def clear_temp_dir():
@@ -83,6 +101,13 @@ def analyzer_store(request):
     analyzer(user_id, request)
     # return HttpResponseRedirect(reverse('main:analyzer', args=['ResumeAnalyzer']))
     return HttpResponseRedirect(reverse('result'))
+
+
+# def analyzer(user_key):
+#     try:
+#         user_data = Data.objects.get(user_key=user_key)
+#     except Data.DoesNotExist as data_unexist:
+#         raise ValueError('Erro: {}'.format(data_unexist))
 
 
 def analyzer(user_key, request):
@@ -197,16 +222,39 @@ def process_results(request):
     user_data.results = pickle.dumps(filtered_resumes)
     user_data.zipped_results = binary
     user_data.save()
-    clear_temp_dir()
+    # clear_temp_dir()
 
 
 def result(request):
+    try:
+        is_logged = request.session['is_logged']
+    except KeyError as err:
+        return render(request, 'accounts/index.html')
+
     template_name = 'analyzer/result.html'
     template = loader.get_template(template_name)
+
+    user_id = request.session['user_key']
+    try:
+        user_data = Data.objects.get(user_key=user_id)
+    except Data.DoesNotExist as data_unexist:
+        user_data = None
+        raise ValueError('Erro: {}'.format(data_unexist))
+
+    dir_name = Path(os.path.join("uploads", "zips", "{}_user_zip".format(user_data.id)))
+    dir_name.mkdir(parents=True, exist_ok=True)
+
+    file_path = os.path.join("uploads", "zips", "{}_user_zip".format(user_data.id), "resumes{}.zip".format(user_data.id))
+
+    zipped_file = open(file_path, "wb+")
+    zipped_file.write(user_data.zipped_results)
+    zipped_file.close()
+
     context = {
         'page_title': 'Result',
+        'file_path' : file_path,
     }
-    return HttpResponse(template.render(context, request), )
+    return HttpResponse(template.render(context, request))
 
 
 def get_result(request):
@@ -216,6 +264,15 @@ def get_result(request):
     except Data.DoesNotExist as data_unexist:
         user_data = None
         raise ValueError('Erro: {}'.format(data_unexist))
+
+    dir_name = Path(os.path.join("temp", "{}_user_zip".format(user_data.id)))
+    dir_name.mkdir(parents=True, exist_ok=True)
+
+    file_path = os.path.join("temp", "{}_user_zip".format(user_data.id), "resumes{}.zip".format(user_data.id))
+
+    zipped_file = open(file_path, "wb+")
+    zipped_file.write(user_data.file)
+    zipped_file.close()
 
     user_json = pickle.loads(user_data.results)
     return HttpResponse(json.dumps(user_json['candidatos']), content_type='application/json')
