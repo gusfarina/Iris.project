@@ -5,6 +5,7 @@ from django.core.validators import validate_email
 from .models import UserAccount
 from django.template import loader
 from django.urls import reverse
+from django.core.cache import cache
 
 
 def index(request):
@@ -18,7 +19,13 @@ def login(request):
     username = request.POST.get('uname')
     password = request.POST.get('psw')
 
-    user = get_object_or_404(UserAccount, username=username, password=password)
+    try:
+        user = get_object_or_404(UserAccount, username=username, password=password)
+        request.session['is_logged'] = True
+    except:
+        messages.error(request, 'Username ou senha inválido')
+        return render(request, 'accounts/index.html')
+
     try:
         avatar = user.avatar.url
     except:
@@ -37,13 +44,15 @@ def login(request):
             'phone': user.phone,
             'password': user.password,
             'avatar': avatar,
+
         }
 
         return redirect('home')
 
 
 def logout(request):
-    request.session = []
+    del request.session['is_logged']
+    cache.clear()
     return redirect('index')
 
 
@@ -106,10 +115,26 @@ def register(request):
 
 
 def profile(request):
-    return render(request, 'accounts/profile.html')
+    try:
+        is_logged = request.session['is_logged']
+    except KeyError as err:
+        return render(request, 'accounts/index.html')
+
+    template_name = 'accounts/profile.html'
+    template = loader.get_template(template_name)
+    context = {
+        'page_title': 'My profile',
+    }
+
+    return HttpResponse(template.render(context, request))
 
 
 def dados(request):
+    try:
+        is_logged = request.session['is_logged']
+    except KeyError as err:
+        return render(request, 'accounts/index.html')
+
     usuarios = UserAccount.objects.all()
     return render(request, 'accounts/dados.html', {
         'usuarios': usuarios

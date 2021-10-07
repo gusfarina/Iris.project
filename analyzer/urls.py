@@ -6,4 +6,5 @@ urlpatterns = [
     path('result', views.result, name='result'),
     path('analisador_store/', views.analyzer_store, name='analyzer_store'),
     path('get_result', views.get_result, name='get_result'),
+    path('download/', views.download_file, name='download'),
 ]

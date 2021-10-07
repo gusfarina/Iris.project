@@ -7,6 +7,11 @@ from django.urls import reverse
 
 
 def resumes(request):
+    try:
+        is_logged = request.session['is_logged']
+    except KeyError as err:
+        return render(request, 'accounts/index.html')
+
     curriculos = Resume.objects.all()
     return render(request, 'resumes/resumes.html', {
         'curriculos': curriculos
@@ -14,6 +19,11 @@ def resumes(request):
 
 
 def register_resume(request):
+    try:
+        is_logged = request.session['is_logged']
+    except KeyError as err:
+        return render(request, 'accounts/index.html')
+
     if request.method != 'POST':
         return render(request, 'resumes/register_resume.html')
 
@@ -54,3 +64,6 @@ def register_resume(request):
     resume.save()
 
     return HttpResponseRedirect(reverse('home'))
+
+
+
