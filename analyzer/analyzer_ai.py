@@ -1,7 +1,4 @@
-# import numpy as np
-# from iris.settings import DATABASES
 import pandas as pd
-# import matplotlib.pyplot as plt
 import warnings
 
 warnings.filterwarnings('ignore')
@@ -15,9 +12,6 @@ from sklearn import metrics
 
 import re
 
-# import nltk
-# from nltk.corpus import stopwords
-# import string
 from wordcloud import WordCloud
 
 from sklearn.preprocessing import LabelEncoder

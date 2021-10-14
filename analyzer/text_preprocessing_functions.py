@@ -7,7 +7,7 @@ import os
 import json
 
 
-def build_class_file_list(files_path, i, encoding='utf8', vectorize=True):
+def build_class_file_list(files_path, i, word_vec=None, encoding='utf8', vectorize=True):
     temp_folder = "temp"
     # Extraindo para um diretorio
     with ZipFile(files_path, 'r') as zipObj:
@@ -31,17 +31,22 @@ def build_class_file_list(files_path, i, encoding='utf8', vectorize=True):
             raw = parser.from_file(r"{}/{}".format(folder_name, file))
             content = raw['content']
             files_together.append(content)
+        elif (file_ext == '.txt'):
+            content = ''
+            with open(r"{}/{}".format(folder_name, file), encoding='Latin-1')as file:
+                content = file.read()
+            files_together.append(content)
         else:
             print('ERRO: Extensao do arquivo nao suportada!')
 
     if vectorize:
-        files_together = text_preprocessing(files_together)
+        files_together = text_preprocessing(files_together, word_vec)
         return files_together
     else:
         return folder_name
 
 
-def text_preprocessing(content):
+def text_preprocessing(content, word_vectorizer):
     for item in content:
         item = re.sub('http\S+\s*', ' ', item)  # remove URLs
         item = re.sub('RT|cc', ' ', item)  # remove RT and cc
@@ -53,14 +58,12 @@ def text_preprocessing(content):
 
     requiredText = content
 
-    word_vectorizer = TfidfVectorizer(
-        sublinear_tf=True,
-        stop_words='english',
-        max_features=1500)
+    # word_vectorizer = TfidfVectorizer(
+    #     sublinear_tf=True,
+    #     stop_words='english',
+    #     max_features=1500)
+    # word_vectorizer.fit(requiredText)
 
-    #         requiredText = [requiredText]
-
-    word_vectorizer.fit(requiredText)
     WordFeatures = word_vectorizer.transform(requiredText)
     # print("WordFeatures.shape: {}".format(WordFeatures.shape))
     return WordFeatures
@@ -148,33 +151,34 @@ def resume_filter_UPDATED(predictions_result, keyword, id, extracted_folder):
             result = json.loads(result_json)
             for file in os.listdir(extracted_folder):
                 if file == result['curriculo']:
-                    # Parsing pdf file to string
-                    raw = parser.from_file(r"{}/{}".format(extracted_folder, file))
+                    this_file_ext = os.path.splitext(file)[1]
+                    content = ''
+                    if this_file_ext == '.pdf':
+                        raw = parser.from_file(r"{}/{}".format(extracted_folder, file))
+                        content = raw["content"]
+                    elif this_file_ext == '.txt':
+                        with open(r"{}/{}".format(extracted_folder, file), encoding='Latin-1')as file:
+                            content = file.read()
 
                     # Getting the NAME from raw text
-                    name = raw["metadata"].get("title", None) or raw["metadata"]["Author"] or \
-                           raw["content"].strip().split()[0]
+                    name = re.findall(r"[A-Z][a-z]+,?\s+(?:[A-Z][a-z]*\.?\s*)?[A-Z][a-z]+", content)[0]
 
                     # Getting the EMAIL from raw text
-                    email_matches = re.findall(r'[\w\.-]+@[\w\.-]+', raw["content"].strip())
-                    for i in email_matches:
-                        email = i
+                    email = re.findall(r'[\w\.-]+@[\w\.-]+', content)[0]
 
                     # Getting the PHONE number from raw text
-                    phone_matches = re.findall(r"\(?\d{2,}\)?[ -]?\d{4,}[\-\s]?\d{4}", raw["content"].strip())
-                    for i in phone_matches:
-                        phone = i
+                    phone = re.findall(r"\(?\d{2,}\)?[ -]?\d{4,}[\-\s]?\d{4}", content)[0]
 
                     user_data = {
                         "cargo": result["cargo"],
                         "curriculo": result["curriculo"],
-                        "nome": name,
-                        "email": email,
-                        "telefone": phone
+                        "nome": name if name != '' else 'Name not found',
+                        "email": email if email != '' else 'Email not found',
+                        "telefone": phone if phone != '' else 'Phone not found'
                     }
 
-                    file_path = os.path.join(extracted_folder, file)
-                    zipObj.write(file_path)
+                    this_file_path = os.path.join(extracted_folder, file)
+                    zipObj.write(this_file_path)
             candidats.append(user_data)
             # print("candidats: {}".format(candidats))
             # result_json = json.loads(result)

@@ -13,6 +13,19 @@ from django.template import loader
 from .models import Data, Analyzer
 
 
+def clear_temp_dir():
+    folder = 'temp'
+    for filename in os.listdir(folder):
+        file_path = os.path.join(folder, filename)
+        try:
+            if os.path.isfile(file_path) or os.path.islink(file_path):
+                os.unlink(file_path)
+            elif os.path.isdir(file_path):
+                shutil.rmtree(file_path)
+        except Exception as e:
+            print('Failed to delete %s. Reason: %s' % (file_path, e))
+
+
 def download_file(request):
     user_id = request.session['user_key']
     file_path = os.path.join("uploads", "zips", "{}_user_zip".format(user_id), "resumes{}.zip".format(user_id))
@@ -29,19 +42,6 @@ def download_file(request):
     clear_temp_dir()
 
     return FileResponse(fl, as_attachment=True, filename=filename)
-
-
-def clear_temp_dir():
-    folder = 'temp'
-    for filename in os.listdir(folder):
-        file_path = os.path.join(folder, filename)
-        try:
-            if os.path.isfile(file_path) or os.path.islink(file_path):
-                os.unlink(file_path)
-            elif os.path.isdir(file_path):
-                shutil.rmtree(file_path)
-        except Exception as e:
-            print('Failed to delete %s. Reason: %s' % (file_path, e))
 
 
 class AiAnalyzer(generic.DetailView):
@@ -98,97 +98,108 @@ def analyzer_store(request):
     Clear 'temp' dir
     """
     clear_temp_dir()
-    analyzer(user_id, request)
+    analyzer(request)
     # return HttpResponseRedirect(reverse('main:analyzer', args=['ResumeAnalyzer']))
     return HttpResponseRedirect(reverse('result'))
 
 
-# def analyzer(user_key):
-#     try:
-#         user_data = Data.objects.get(user_key=user_key)
-#     except Data.DoesNotExist as data_unexist:
-#         raise ValueError('Erro: {}'.format(data_unexist))
-
-
-def analyzer(user_key, request):
+def analyzer(request):
     print("Starting prediction function...")
+    user_id = request.session['user_key']
+    """
     try:
+        # Gets the Trained AI component
         model = Analyzer.objects.get(name='ResumeAnalyzer')
     except BaseException as err:
         model = None
         print('Erro: {}'.format(err))
     else:
         try:
-            user_data = Data.objects.get(user_key=user_key)
+            user_data = Data.objects.get(user_key=user_id)
         except Data.DoesNotExist as data_unexist:
             user_data = None
             raise ValueError('Erro: {}'.format(data_unexist))
+    """
+    try:
+        # Gets the trained AI component
+        model = Analyzer.objects.get(name='ResumeAnalyzer')
+        # Gets the especific Data from the especific user  
+        user_data = Data.objects.get(user_key=user_id)
+    except BaseException as err:
+        model = None
+        print(f'Erro: {err}')
+    except Data.DoesNotExist as data_unexist:
+        user_data = None
+        raise ValueError(f'Erro: {data_unexist}')
 
-    if model and user_data:
-        print("Loading the model from pickle...")
-        ai = pickle.loads(model.model)
+    print("Loading the model from pickle...")
+    ai = pickle.loads(model.model)
 
-        dir_name = Path(os.path.join("temp", "{}_to_predict".format(user_data.id)))
-        dir_name.mkdir(parents=True, exist_ok=True)
+    # Creating path to store the data to predict
+    dir_name = Path(os.path.join("temp", "{}_to_predict".format(user_data.id)))
+    dir_name.mkdir(parents=True, exist_ok=True)
 
-        file_path = os.path.join("temp", "{}_to_predict".format(user_data.id), "resumes_{}.zip".format(user_data.id))
+    # Getting the path containing data to predict
+    file_path = os.path.join("temp", "{}_to_predict".format(user_data.id), "resumes_{}.zip".format(user_data.id))
 
-        zipped_file = open(file_path, "wb+")
-        zipped_file.write(user_data.file)
-        zipped_file.close()
+    # Writing the binary zipped user file to a zipfile
+    zipped_file = open(file_path, "wb+")
+    zipped_file.write(user_data.file)
+    zipped_file.close()
 
-        list_file = text_preprocessing.build_class_file_list(file_path, user_data.id)
+    word_vec = pickle.loads(model.word_vec)
+    list_file = text_preprocessing.build_class_file_list(files_path=file_path, i=user_data.id, word_vec=word_vec)
 
-        print("Making the predictions...")
-        predictions = []
-        for item in list_file:
-            prediction = ai.predict(item)
-            predictions.append(prediction)
+    print("Making the predictions...")
+    predictions = []
+    for item in list_file:
+        prediction = ai.predict(item)
+        predictions.append(prediction)
 
-        print("Organizing the results...")
-        unique_category_num = ['Data Science - 6', 'HR - 12', 'Advocate - 0', 'Arts - 1', 'Web Designing - 24',
-                               'Mechanical Engineer - 16', 'Sales - 22', 'Health and fitness - 14',
-                               'Civil Engineer - 5', 'Java Developer - 15', 'Business Analyst - 4',
-                               'SAP Developer - 21', 'Automation Testing - 2', 'Electrical Engineering - 11',
-                               'Operations Manager - 18', 'Python Developer - 20', 'DevOps Engineer - 8',
-                               'Network Security Engineer - 17', 'PMO - 19', 'Database - 7', 'Hadoop - 13',
-                               'ETL Developer - 10', 'DotNet Developer - 9', 'Blockchain - 3', 'Testing - 23']
-        predictions_result = []
-        for index in range(len(predictions)):
-            for category in unique_category_num:
-                category = category.split('-')
+    print("Organizing the results...")
+    unique_category_num = ['Data Science - 6', 'HR - 12', 'Advocate - 0', 'Arts - 1', 'Web Designing - 24',
+                            'Mechanical Engineer - 16', 'Sales - 22', 'Health and fitness - 14',
+                            'Civil Engineer - 5', 'Java Developer - 15', 'Business Analyst - 4',
+                            'SAP Developer - 21', 'Automation Testing - 2', 'Electrical Engineering - 11',
+                            'Operations Manager - 18', 'Python Developer - 20', 'DevOps Engineer - 8',
+                            'Network Security Engineer - 17', 'PMO - 19', 'Database - 7', 'Hadoop - 13',
+                            'ETL Developer - 10', 'DotNet Developer - 9', 'Blockchain - 3', 'Testing - 23']
+    predictions_result = []
+    for index in range(len(predictions)):
+        for category in unique_category_num:
+            category = category.split('-')
 
-                if int(category[1]) == int(predictions[index]):
-                    files_dir = os.listdir('temp/extracted_{}'.format(user_data.id))
+            if int(category[1]) == int(predictions[index]):
+                files_dir = os.listdir('temp/extracted_{}'.format(user_data.id))
 
-                    folder_name = 'temp/extracted_{}'.format(user_data.id)
+                folder_name = 'temp/extracted_{}'.format(user_data.id)
 
-                    for fname in files_dir:
-                        path = os.path.join('temp/extracted_{}'.format(user_data.id), fname)
-                        if os.path.isdir(path):
-                            folder_name = "temp/extracted_{}/{}".format(user_data.id, fname)
-                            break
+                for fname in files_dir:
+                    path = os.path.join('temp/extracted_{}'.format(user_data.id), fname)
+                    if os.path.isdir(path):
+                        folder_name = "temp/extracted_{}/{}".format(user_data.id, fname)
+                        break
 
-                    files_name = os.listdir(folder_name)
+                files_name = os.listdir(folder_name)
 
-                    prediction_json = {
-                        "cargo": str(category[0]).strip(),
-                        "curriculo": files_name[index],
-                        "candidato": []
-                    }
-                    prediction_json = json.dumps(prediction_json)
+                prediction_json = {
+                    "cargo": str(category[0]).strip(),
+                    "curriculo": files_name[index],
+                    "candidato": []
+                }
+                prediction_json = json.dumps(prediction_json)
 
-                    # predictions_result.append(("Item - " + str(index), "Category - " + str(category[0])))
-                    predictions_result.append(prediction_json)
+                # predictions_result.append(("Item - " + str(index), "Category - " + str(category[0])))
+                predictions_result.append(prediction_json)
 
-        pickled_result = pickle.dumps(predictions_result)
-        user_data.results = pickled_result
-        user_data.save()
-        clear_temp_dir()
-        process_results(request)
+    pickled_result = pickle.dumps(predictions_result)
+    user_data.results = pickled_result
+    user_data.save()
+    process_results(request, file_path)
+    # clear_temp_dir()
+    
 
-
-def process_results(request):
+def process_results(request, file_path):
     user_id = request.session['user_key']
     try:
         user_data = Data.objects.get(user_key=user_id)
@@ -199,15 +210,17 @@ def process_results(request):
     user_json = pickle.loads(user_data.results)
     keyword = user_data.key_word
 
+    """
     # Salva o arquivo zip do usuario na pasta temp
     dir_name = Path(os.path.join("temp", "{}_user_zip".format(user_data.id)))
     dir_name.mkdir(parents=True, exist_ok=True)
 
-    file_path = os.path.join("temp", "{}_user_zip".format(user_data.id), "resumes{}.zip".format(user_data.id))
+    file_path = os.path.join("temp", f"{user_data.id}_user_zip", f"resumes{user_data.id}.zip")
 
     zipped_file = open(file_path, "wb+")
     zipped_file.write(user_data.file)
     zipped_file.close()
+    """
 
     # Pega o caminho dos arquivos extraidos do zip pela funcao "build_class_file_list"
     extracted_folder = text_preprocessing.build_class_file_list(file_path, user_data.id, vectorize=False)
@@ -215,14 +228,14 @@ def process_results(request):
     # Pega o caminho contendo um zip com todos os pdfs filtrados
     filtered_pdfs_path, filtered_resumes = text_preprocessing.resume_filter_UPDATED(user_json, keyword, user_data.id,
                                                                                     extracted_folder)
-
+    print(f"Filtered Pdfs Path: {filtered_pdfs_path.split('/')}")
     with open(filtered_pdfs_path, 'rb') as file:
         binary = file.read()
 
+    print(f'filtered_resumes: {filtered_resumes}')
     user_data.results = pickle.dumps(filtered_resumes)
     user_data.zipped_results = binary
     user_data.save()
-    # clear_temp_dir()
 
 
 def result(request):
@@ -240,12 +253,25 @@ def result(request):
     except Data.DoesNotExist as data_unexist:
         user_data = None
         raise ValueError('Erro: {}'.format(data_unexist))
-
+    """
     dir_name = Path(os.path.join("uploads", "zips", "{}_user_zip".format(user_data.id)))
     dir_name.mkdir(parents=True, exist_ok=True)
 
     file_path = os.path.join("uploads", "zips", "{}_user_zip".format(user_data.id), "resumes{}.zip".format(user_data.id))
 
+    zipped_file = open(file_path, "wb+")
+    zipped_file.write(user_data.zipped_results)
+    zipped_file.close()
+    """
+    
+    # Creating path to store the data to predict
+    dir_name = Path(os.path.join("temp", f"{user_data.id}_results"))
+    dir_name.mkdir(parents=True, exist_ok=True)
+
+    # Getting the path containing data to predict
+    file_path = os.path.join("temp", f"{user_data.id}_results", f"resumes_{user_data.id}.zip")
+
+    # Writing the binary zipped user file to a zipfile
     zipped_file = open(file_path, "wb+")
     zipped_file.write(user_data.zipped_results)
     zipped_file.close()
