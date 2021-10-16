@@ -1,20 +1,8 @@
-# import numpy as np
 from numpy import mean
-# from numpy import std
-# import os
-# import shutil
 import pickle
-# import logging
-# import signal
-# import jwt
-# import sys
-# import MySQLdb
-# import pika
 import string
 import re
 import pandas as pd
-#from pathlib import Path
-# import settings
 
 from django.db import connection
 from django.conf import settings
@@ -22,16 +10,13 @@ from django.conf import settings
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import precision_score, recall_score, accuracy_score
 
+from sklearn.naive_bayes import MultinomialNB
 from sklearn.svm import SVC
 from sklearn.metrics import classification_report
 from sklearn.model_selection import KFold
 from sklearn.model_selection import cross_val_score
 
 from sklearn.preprocessing import LabelEncoder
-
-# import xgboost as xgb
-# from db_logger import DBHandler
-# from zipfile import ZipFile
 
 from sklearn.feature_extraction.text import TfidfVectorizer
 from nltk.corpus import stopwords
@@ -80,7 +65,7 @@ def text_preprocessing(content):
 
 
 def svm_create_model(X, y, data_split_type='holdout', to_pred=(False,)):
-    svc = SVC(C=1, kernel='linear', gamma='auto', decision_function_shape='ovr', random_state=47)
+    svc = SVC(C=1, kernel='linear', gamma='auto', decision_function_shape='ovr', random_state=47, probability=True)
     
     if data_split_type == 'kfold':
         k_fold = KFold(n_splits=10, random_state=1, shuffle=True)
@@ -102,6 +87,35 @@ def svm_create_model(X, y, data_split_type='holdout', to_pred=(False,)):
     
     print(classification_report(y_test, svc_pred))
     return (svc, k_fold_accuracy, precision, recall)
+
+def nb_create_model(X, y, data_split_type='holdout'):
+    nb = MultinomialNB()
+    
+    if data_split_type == 'kfold':
+        k_fold = KFold(n_splits=10, random_state=1, shuffle=True)
+        kfold_scores = cross_val_score(nb, X, y, scoring='accuracy', cv=k_fold, n_jobs=6)
+        k_fold_accuracy = mean(kfold_scores)
+        print(f'Kfold Accuracy: {mean(kfold_scores)}')
+    
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=23)
+    
+    nb.fit(X, y)
+    
+    nb_pred = nb.predict(X_test)
+    nb_pred_proba = nb.predict_proba(X_test)
+    
+    # accuracy = accuracy_score(y_test, nb_pred)
+    # precision = precision_score(y_test, nb_pred, average='macro')
+    # recall = recall_score(y_test, nb_pred, average='macro')
+    # print(f"Accuracy = {accuracy}")
+    # print(f"Precision = {precision}")
+    # print(f"Recall = {recall}")
+    
+    # print(f"Predict Proba = {nb_pred_proba[0]}")
+    
+    print(classification_report(y_test, nb_pred))
+    precision, recall = 0, 0
+    return (nb, k_fold_accuracy, precision, recall)
 
 
 resumes = pd.read_csv('training_dataset/Resume_Data.csv')
@@ -141,7 +155,8 @@ over_sampler = RandomOverSampler(random_state=42)
 X_res, y_res = over_sampler.fit_resample(train_word_features, y)
 
 
-svc_model, accuracy, precision, recall = svm_create_model(X_res, y_res, data_split_type='kfold')
+# svc_model, accuracy, precision, recall = svm_create_model(X_res, y_res, data_split_type='kfold') # SVC
+nb_model, accuracy, precision, recall = nb_create_model(X_res, y_res, data_split_type='kfold') # NaiveBayes
 
 
 print("Saving the model to the DB...")
@@ -157,13 +172,9 @@ settings.configure(DATABASES={
     },
 })
 
-pickled_model = pickle.dumps(svc_model)
+pickled_model = pickle.dumps(nb_model)
 pickled_word_vec = pickle.dumps(word_vectorizer)
 pickled_le = pickle.dumps(le)
-
-# pickled_model = pickle.dumps(0)
-# pickled_word_vec = pickle.dumps(0)
-# pickled_le = pickle.dumps(0)
 
 print(f'pickled_model: {type(str(pickled_model))}')
 
@@ -174,20 +185,9 @@ with connection.cursor() as cursor:
         
         sql = "REPLACE INTO analyzer (version, name, model, word_vec, label_encoder, status, recall, accuracy) VALUES (%s, %s, %s, %s, %s, %s, %s, %s);"
         print(sql)
-        cursor.execute(sql, (2, 'ResumeAnalyzer', pickled_model, pickled_word_vec, pickled_le, 'OK', recall, accuracy))
+        cursor.execute(sql, (2, 'ResumeAnalyzerNB', pickled_model, pickled_word_vec, pickled_le, 'OK', recall, accuracy))
     except BaseException as err:
         print("An error occurred while saving the model in the db")
         print('ERROR: {}'.format(err))
 
 print("DONE!")
-
-
-# version = models.CharField(max_length=100, null=False)
-# name = models.CharField(primary_key=True, max_length=100, null=False)
-# model = models.BinaryField(max_length=None, null=True)
-# word_vec = models.BinaryField(max_length=None, null=True)
-# label_encoder = models.BinaryField(max_length=None, null=True)
-# status = models.CharField(max_length=100, null=True)
-# precision = models.FloatField(null=True)
-# recall = models.FloatField(null=True)
-# accuracy = models.FloatField(null=True)

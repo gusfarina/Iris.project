@@ -12,6 +12,8 @@ import shutil
 from django.template import loader
 from .models import Data, Analyzer
 
+import numpy as np
+
 
 def clear_temp_dir():
     folder = 'temp'
@@ -28,7 +30,8 @@ def clear_temp_dir():
 
 def download_file(request):
     user_id = request.session['user_key']
-    file_path = os.path.join("uploads", "zips", "{}_user_zip".format(user_id), "resumes{}.zip".format(user_id))
+    # file_path = os.path.join("uploads", "zips", "{}_user_zip".format(user_id), "resumes{}.zip".format(user_id))
+    file_path = os.path.join("temp", f"{user_id}_results", f"resumes_{user_id}.zip")
 
     # zipped_file = open(file_path, "wb")
     # to_file = file
@@ -106,23 +109,9 @@ def analyzer_store(request):
 def analyzer(request):
     print("Starting prediction function...")
     user_id = request.session['user_key']
-    """
-    try:
-        # Gets the Trained AI component
-        model = Analyzer.objects.get(name='ResumeAnalyzer')
-    except BaseException as err:
-        model = None
-        print('Erro: {}'.format(err))
-    else:
-        try:
-            user_data = Data.objects.get(user_key=user_id)
-        except Data.DoesNotExist as data_unexist:
-            user_data = None
-            raise ValueError('Erro: {}'.format(data_unexist))
-    """
     try:
         # Gets the trained AI component
-        model = Analyzer.objects.get(name='ResumeAnalyzer')
+        model = Analyzer.objects.get(name='ResumeAnalyzerNB')
         # Gets the especific Data from the especific user  
         user_data = Data.objects.get(user_key=user_id)
     except BaseException as err:
@@ -134,6 +123,8 @@ def analyzer(request):
 
     print("Loading the model from pickle...")
     ai = pickle.loads(model.model)
+    word_vec = pickle.loads(model.word_vec)
+    le = pickle.loads(model.label_encoder)
 
     # Creating path to store the data to predict
     dir_name = Path(os.path.join("temp", "{}_to_predict".format(user_data.id)))
@@ -147,15 +138,30 @@ def analyzer(request):
     zipped_file.write(user_data.file)
     zipped_file.close()
 
-    word_vec = pickle.loads(model.word_vec)
     list_file = text_preprocessing.build_class_file_list(files_path=file_path, i=user_data.id, word_vec=word_vec)
+    print(f'list_file: {list_file.shape}')
+
 
     print("Making the predictions...")
+    """
     predictions = []
+    probas = []
     for item in list_file:
+        # print(f"item: {item.shape}")
         prediction = ai.predict(item)
-        predictions.append(prediction)
+        proba_prediction = ai.predict_proba(item)
 
+        probas.append(proba_prediction)
+        predictions.append(prediction)
+    # print(f"predictions: {np.ravel(predictions,order='C')}")
+    print(f"transformed predictions: {le.inverse_transform(np.ravel(predictions,order='C'))}")
+    print(f"predictions probas: {probas.shape}")
+    """
+    predictions = ai.predict(list_file)
+    probas = ai.predict_proba(list_file)
+    max_probs = [prob[prob.argmax()] for prob in probas]
+
+    """
     print("Organizing the results...")
     unique_category_num = ['Data Science - 6', 'HR - 12', 'Advocate - 0', 'Arts - 1', 'Web Designing - 24',
                             'Mechanical Engineer - 16', 'Sales - 22', 'Health and fitness - 14',
@@ -191,6 +197,36 @@ def analyzer(request):
 
                 # predictions_result.append(("Item - " + str(index), "Category - " + str(category[0])))
                 predictions_result.append(prediction_json)
+    """
+
+    predictions_result = []
+    transformed_preds = le.inverse_transform(predictions)
+    for index in range(len(transformed_preds)):
+        folder_name = 'temp/extracted_{}'.format(user_data.id)
+        files_dir = os.listdir(folder_name)
+
+        for fname in files_dir:
+            path = os.path.join(folder_name, fname)
+            if os.path.isdir(path):
+                folder_name = "temp/extracted_{}/{}".format(user_data.id, fname)
+                break
+
+        files_name = os.listdir(folder_name)
+         
+        prediction_json = {
+            "certeza": "%.2f" % max_probs[index],
+            "cargo": transformed_preds[index].strip(),
+            "curriculo": files_name[index],
+            "candidato": []
+        }
+        prediction_json = json.dumps(prediction_json)
+
+        # predictions_result.append(("Item - " + str(index), "Category - " + str(category[0])))
+        predictions_result.append(prediction_json)
+
+    # import pprint
+    # pprint.pprint(predictions_result)
+    # print(f'\n predictions_result: {predictions_result} \n')
 
     pickled_result = pickle.dumps(predictions_result)
     user_data.results = pickled_result
@@ -200,6 +236,7 @@ def analyzer(request):
     
 
 def process_results(request, file_path):
+    # print(f"FILE PATH process_results: {file_path}")
     user_id = request.session['user_key']
     try:
         user_data = Data.objects.get(user_key=user_id)
@@ -226,13 +263,13 @@ def process_results(request, file_path):
     extracted_folder = text_preprocessing.build_class_file_list(file_path, user_data.id, vectorize=False)
 
     # Pega o caminho contendo um zip com todos os pdfs filtrados
-    filtered_pdfs_path, filtered_resumes = text_preprocessing.resume_filter_UPDATED(user_json, keyword, user_data.id,
-                                                                                    extracted_folder)
-    print(f"Filtered Pdfs Path: {filtered_pdfs_path.split('/')}")
+    filtered_pdfs_path, filtered_resumes = text_preprocessing.resume_filter_UPDATED(user_json, keyword, user_data.id, extracted_folder)
+
+    # print(f"Filtered Pdfs Path: {filtered_pdfs_path.split('/')}")
     with open(filtered_pdfs_path, 'rb') as file:
         binary = file.read()
 
-    print(f'filtered_resumes: {filtered_resumes}')
+    # print(f'filtered_resumes: {filtered_resumes}')
     user_data.results = pickle.dumps(filtered_resumes)
     user_data.zipped_results = binary
     user_data.save()
@@ -263,6 +300,8 @@ def result(request):
     zipped_file.write(user_data.zipped_results)
     zipped_file.close()
     """
+    # print(f"FILE PATH process_results: {file_path}")
+
     
     # Creating path to store the data to predict
     dir_name = Path(os.path.join("temp", f"{user_data.id}_results"))
@@ -276,6 +315,7 @@ def result(request):
     zipped_file.write(user_data.zipped_results)
     zipped_file.close()
 
+    print(f"FILE PATH results: {file_path}")
     context = {
         'page_title': 'Result',
         'file_path' : file_path,
