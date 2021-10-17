@@ -25,6 +25,7 @@ class Data(models.Model):
     file = models.BinaryField(max_length=None, null=True)
     user_key = models.CharField(max_length=100, null=True)
     results = models.BinaryField(max_length=None, null=True)
+    raw_results = models.BinaryField(max_length=None, null=True)
     zipped_results = models.BinaryField( max_length=None, null=True)
 
 

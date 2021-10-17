@@ -40,10 +40,6 @@ def download_file(request):
 
     filename = "{}_download.zip".format(user_id)
     fl = open(file_path, 'rb')
-
-    # Clear "temp" dir
-    clear_temp_dir()
-
     return FileResponse(fl, as_attachment=True, filename=filename)
 
 
@@ -214,7 +210,7 @@ def analyzer(request):
         files_name = os.listdir(folder_name)
          
         prediction_json = {
-            "certeza": "%.2f" % max_probs[index],
+            "certeza": "%.2f" % max_probs[index] + " %",
             "cargo": transformed_preds[index].strip(),
             "curriculo": files_name[index],
             "candidato": []
@@ -224,12 +220,12 @@ def analyzer(request):
         # predictions_result.append(("Item - " + str(index), "Category - " + str(category[0])))
         predictions_result.append(prediction_json)
 
-    # import pprint
-    # pprint.pprint(predictions_result)
+    import pprint
+    pprint.pprint(predictions_result)
     # print(f'\n predictions_result: {predictions_result} \n')
 
     pickled_result = pickle.dumps(predictions_result)
-    user_data.results = pickled_result
+    user_data.raw_results = pickled_result
     user_data.save()
     process_results(request, file_path)
     # clear_temp_dir()
@@ -238,13 +234,15 @@ def analyzer(request):
 def process_results(request, file_path):
     # print(f"FILE PATH process_results: {file_path}")
     user_id = request.session['user_key']
+    certainty = request.POST['certainty']
+
     try:
         user_data = Data.objects.get(user_key=user_id)
     except Data.DoesNotExist as data_unexist:
         user_data = None
         raise ValueError('Erro: {}'.format(data_unexist))
 
-    user_json = pickle.loads(user_data.results)
+    user_json = pickle.loads(user_data.raw_results)
     keyword = user_data.key_word
 
     """
@@ -263,7 +261,7 @@ def process_results(request, file_path):
     extracted_folder = text_preprocessing.build_class_file_list(file_path, user_data.id, vectorize=False)
 
     # Pega o caminho contendo um zip com todos os pdfs filtrados
-    filtered_pdfs_path, filtered_resumes = text_preprocessing.resume_filter_UPDATED(user_json, keyword, user_data.id, extracted_folder)
+    filtered_pdfs_path, filtered_resumes = text_preprocessing.resume_filter_UPDATED(user_json, keyword, user_data.id, extracted_folder, certainty)
 
     # print(f"Filtered Pdfs Path: {filtered_pdfs_path.split('/')}")
     with open(filtered_pdfs_path, 'rb') as file:
@@ -319,6 +317,7 @@ def result(request):
     context = {
         'page_title': 'Result',
         'file_path' : file_path,
+        'keyword': user_data.key_word
     }
     return HttpResponse(template.render(context, request))
 

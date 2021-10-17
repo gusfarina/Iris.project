@@ -21,6 +21,7 @@
 <!--            <a href="{% url 'download' %}" class="button skinny" name="class_1_download">-->
 <!--                <p>Baixar Arquivo</p>-->
 <!--            </a>-->
+            <b>{{keyword}}</b>
             <a href="{% url 'download' %}" download="zip" type="application/zip" class="btn btn-primary font-weight-bolder">
             <!-- <a href="{% url 'download' %}" class="btn btn-primary font-weight-bolder"></a> -->
                 <span class="svg-icon svg-icon-md"><!--begin::Svg Icon | path:assets/media/svg/icons/Design/Flatten.svg--><svg
@@ -35,6 +36,7 @@
                     </svg><!--end::Svg Icon-->
                 </span> Download ZIP
             </a>
+            
         </div>
     </div>
 </div>
@@ -69,9 +71,15 @@
 
             pagination: true,
             // columns definition
-            columns: [{
-                field: 'nome',
-                title: 'Name',
+            columns: [
+            // {
+            //     field: 'nome',
+            //     title: 'Name',
+            // },
+            {
+                field: 'curriculo',
+                title: 'Resume',
+                 width: 60  ,
             },
             {
                 field: 'email',
@@ -82,8 +90,8 @@
                 title: 'Phone',
             },
             {
-                field: 'curriculo',
-                title: 'Resume',
+                field: 'certeza',
+                title: 'Confianca',
                  width: 60  ,
             },]
         });

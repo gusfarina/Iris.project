@@ -63,11 +63,11 @@ def text_preprocessing(content, word_vectorizer):
     return WordFeatures
 
 
-def resume_filter_UPDATED(predictions_result, keyword, id, extracted_folder):
+def resume_filter_UPDATED(predictions_result, keyword, id, extracted_folder, certainty):
     filtered_resumes = []
     for pred_json in predictions_result:
         result = json.loads(pred_json)
-        if keyword == result['cargo']:
+        if (keyword == result['cargo']) and (result['certeza'] >= certainty):
             filtered_resumes.append(pred_json)
 
     # Cria novo zip contendo apenas os curriculos filtrados
