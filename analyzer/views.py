@@ -235,6 +235,7 @@ def process_results(request, file_path):
     # print(f"FILE PATH process_results: {file_path}")
     user_id = request.session['user_key']
     certainty = request.POST['certainty']
+    certainty = str(float(certainty) * 0.01)
 
     try:
         user_data = Data.objects.get(user_key=user_id)
