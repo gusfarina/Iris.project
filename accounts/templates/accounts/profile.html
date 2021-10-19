@@ -29,7 +29,6 @@
                     <!--end::Item-->
 
 
-
                     <!--begin::Item-->
                     <li class="nav-item mr-3">
                         <a class="nav-link" data-toggle="tab" href="#kt_user_edit_tab_3">
@@ -59,7 +58,7 @@
 
         <!--begin::Card body-->
         <div class="card-body px-0">
-           <form class="form" id="kt_form">
+            <form class="form" id="kt_form">
                 <div class="tab-content">
                     <!--begin::Tab-->
                     <div class="tab-pane show active px-7" id="kt_user_edit_tab_1" role="tabpanel">
@@ -75,7 +74,7 @@
                                     </div>
                                 </div>
                                 <!--end::Row-->
-                                {% if  request.session.user.avatar %}
+                                {% if request.session.user.avatar %}
                                 <!--begin::Group-->
                                 <div class="form-group row">
                                     <label class="col-form-label col-3 text-lg-right text-left">Avatar</label>
@@ -89,7 +88,8 @@
                                                    data-action="change" data-toggle="tooltip" title=""
                                                    data-original-title="Change avatar">
                                                 <i class="fa fa-pen icon-sm text-muted"></i>
-                                                <input type="file" name="profile_avatar" accept=".png, .jpg, .jpeg" id="profile_avatar">
+                                                <input type="file" name="profile_avatar" accept=".png, .jpg, .jpeg"
+                                                       id="profile_avatar">
                                                 <input type="hidden" name="profile_avatar_remove">
                                             </label>
 
@@ -122,7 +122,8 @@
                                                    data-action="change" data-toggle="tooltip" title=""
                                                    data-original-title="Change avatar">
                                                 <i class="fa fa-pen icon-sm text-muted"></i>
-                                                <input type="file" name="profile_avatar" accept=".png, .jpg, .jpeg" id="profile_avatar">
+                                                <input type="file" name="profile_avatar" accept=".png, .jpg, .jpeg"
+                                                       id="profile_avatar">
                                                 <input type="hidden" name="profile_avatar_remove">
                                             </label>
 
@@ -160,12 +161,12 @@
                                     </div>
                                 </div>
                                 <!--end::Group-->
-                                 <!--begin::Group-->
+                                <!--begin::Group-->
                                 <div class="form-group row">
                                     <label class="col-form-label col-3 text-lg-right text-left">Username</label>
                                     <div class="col-9">
                                         <input class="form-control form-control-lg form-control-solid" type="text"
-                                               value="{{ request.session.user.username }}" >
+                                               value="{{ request.session.user.username }}">
                                     </div>
                                 </div>
                                 <!--end::Group-->
@@ -195,6 +196,15 @@
                                         </div>
                                     </div>
                                 </div>
+                                <div class="row">
+                                        <div class="col-3"></div>
+                                        <div class="col-9">
+                                            <a href="{% url 'profile' %}" type="submit"
+                                               class="btn btn-light-primary font-weight-bold">Save changes</a>
+                                            <a href="{% url 'profile'%}" class="btn btn-clean font-weight-bold">Cancel</a>
+                                        </div>
+                                    </div>
+
                                 <!--end::Group-->
 
                             </div>
@@ -289,21 +299,46 @@
                                     <div class="row">
                                         <div class="col-3"></div>
                                         <div class="col-9">
-                                            <a href="{% url 'profile' %}" type="submit" class="btn btn-light-primary font-weight-bold">Save changes</a>
+                                            <a href="{% url 'profile' %}" type="submit"
+                                               class="btn btn-light-primary font-weight-bold">Save changes</a>
                                             <a href="#" class="btn btn-clean font-weight-bold">Cancel</a>
                                         </div>
+                                    </div>
                                 </div>
                             </div>
+                            <!--end::Footer-->
                         </div>
-                        <!--end::Footer-->
+                        <!--end::Tab-->
                     </div>
-                    <!--end::Tab-->
-                </div>
             </form>
         </div>
         <!--begin::Card body-->
     </div>
     <!--end::Card-->
 </div>
+<script>
+    $(function(){
+  $('#profile_avatar').change(function(){
+    var input = this;
+    var url = $(this).val();
+    var ext = url.substring(url.lastIndexOf('.') + 1).toLowerCase();
+    if (input.files && input.files[0]&& (ext == "png" || ext == "jpeg" || ext == "jpg"))
+     {
+        var reader = new FileReader();
+
+        reader.onload = function (e) {
+           $('#kt_user_edit_avatar').attr('style', 'background-image: url(\''+e.target.result+'\')');
+        }
+       reader.readAsDataURL(input.files[0]);
+    }
+    else
+    {
+      $('#kt_user_edit_avatar').attr('style', 'background-image: url(\'#\')');
+    }
+  });
+
+});
+
+</script>
 {% endblock %}
 

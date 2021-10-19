@@ -120,6 +120,18 @@ def profile(request):
     except KeyError as err:
         return render(request, 'accounts/index.html')
 
+    if request.method != 'POST':
+        return render(request, 'accounts/profile.html')
+
+    firstname = request.POST.get('firstname')
+    lastname = request.POST.get('lastname')
+    username = request.POST.get('username')
+    phone = request.POST.get('phone')
+    email = request.POST.get('email')
+    psw = request.POST.get('psw')
+    psw2 = request.POST.get('psw2')
+    country = request.POST.get('country')
+
     template_name = 'accounts/profile.html'
     template = loader.get_template(template_name)
     context = {

@@ -49,6 +49,10 @@ class AiAnalyzer(generic.DetailView):
     context_object_name = 'obj_model'
 
     def get(self, request):
+        try:
+            is_logged = request.session['is_logged']
+        except KeyError as err:
+            return render(request, 'accounts/index.html')
         # print('TESTE DE SESSION: {}'.format(request.session['user_key']))
 
         return render(request, self.template_name, {})
