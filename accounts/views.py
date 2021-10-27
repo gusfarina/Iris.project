@@ -43,6 +43,7 @@ def login(request):
             'email': user.email,
             'phone': user.phone,
             'password': user.password,
+            'country': user.country,
             'avatar': avatar,
 
         }
@@ -120,17 +121,43 @@ def profile(request):
     except KeyError as err:
         return render(request, 'accounts/index.html')
 
+    user_id = request.session['user_key']
+
     if request.method != 'POST':
         return render(request, 'accounts/profile.html')
 
     firstname = request.POST.get('firstname')
     lastname = request.POST.get('lastname')
-    username = request.POST.get('username')
     phone = request.POST.get('phone')
-    email = request.POST.get('email')
-    psw = request.POST.get('psw')
-    psw2 = request.POST.get('psw2')
+    a_psw = request.POST.get('a_psw')
+    n_psw = request.POST.get('psw')
+    n_psw2 = request.POST.get('psw2')
     country = request.POST.get('country')
+
+    try:
+        user = UserAccount.objects.get(id=user_id)
+    except UserAccount.DoesNotExist:
+        user = UserAccount()
+
+    if a_psw != user.password:
+        messages.error(request, 'Senha antiga não conferem.')
+        return render(request, 'accounts/profile.html')
+
+    if n_psw != n_psw2:
+        messages.error(request, 'Senhas não conferem.')
+        return render(request, 'accounts/profile.html')
+
+    if len(n_psw) < 6:
+        messages.error(request, 'Senha precisa ter 6 caracteres ou mais.')
+        return render(request, 'accounts/profile.html')
+
+    user.firstname = firstname
+    user.lastname = lastname
+    user.phone = phone
+    user.password = n_psw
+    user.country = country
+    user.user_key = user_id
+    user.save()
 
     template_name = 'accounts/profile.html'
     template = loader.get_template(template_name)

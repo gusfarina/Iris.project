@@ -307,11 +307,12 @@ def result(request):
 
     
     # Creating path to store the data to predict
-    dir_name = Path(os.path.join("temp", f"{user_data.id}_results"))
+    dir_name = Path(os.path.join("temp", f"{user_data.user_key}_results"))
     dir_name.mkdir(parents=True, exist_ok=True)
 
     # Getting the path containing data to predict
-    file_path = os.path.join("temp", f"{user_data.id}_results", f"resumes_{user_data.id}.zip")
+    file_path = os.path.join("temp", f"{user_data.user_key}_results", f"resumes_{user_data.user_key}.zip")
+    print(f'FILE PATH{file_path}')
 
     # Writing the binary zipped user file to a zipfile
     zipped_file = open(file_path, "wb+")
