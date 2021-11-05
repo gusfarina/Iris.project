@@ -122,6 +122,59 @@ def resume_filter_UPDATED(predictions_result, keyword, id, extracted_folder, cer
     return file_path, filtered_resumes_json
 
 
+def prediction_formatter(predictions_result, id, extracted_folder):
+    resumes_list = []
+    for pred_json in predictions_result:
+        resumes_list.append(pred_json)
+
+    # Cria novo zip contendo apenas os curriculos filtrados
+    dir_name = Path(os.path.join("temp", "{}_formatted".format(id)))
+    dir_name.mkdir(parents=True, exist_ok=True)
+
+    file_path = os.path.join("temp", "{}_formatted".format(id), "formatted_resumes_{}.zip".format(id))
+
+    with ZipFile(file_path, 'w') as zipObj:
+        candidats = []
+        for result_json in resumes_list:
+            result = json.loads(result_json)
+            for file in os.listdir(extracted_folder):
+                if file == result['curriculo']:
+                    this_file_ext = os.path.splitext(file)[1]
+                    content = ''
+                    if this_file_ext == '.pdf':
+                        raw = parser.from_file(r"{}/{}".format(extracted_folder, file))
+                        content = raw["content"]
+                    elif this_file_ext == '.txt':
+                        with open(r"{}/{}".format(extracted_folder, file), encoding='Latin-1') as my_file:
+                            content = my_file.read()
+
+                    # Getting the NAME from raw text
+                    name = re.findall(r"[A-Z][a-z]+,?\s+(?:[A-Z][a-z]*\.?\s*)?[A-Z][a-z]+", content)[0]
+
+                    # Getting the EMAIL from raw text
+                    email = re.findall(r'[\w\.-]+@[\w\.-]+', content)
+
+                    # Getting the PHONE number from raw text
+                    phone = re.findall(r"\(?\d{2,}\)?[ -]?\d{4,}[\-\s]?\d{4}", content)
+
+                    user_data = {
+                        "certeza": result["certeza"],
+                        "cargo": result["cargo"],
+                        "curriculo": result["curriculo"],
+                        "nome": name if name != '' else 'Name not found',
+                        "email": email if email != '' else 'Email not found',
+                        "telefone": phone if phone != '' else 'Phone not found'
+                    }
+
+                    this_file_path = os.path.join(extracted_folder, file)
+                    zipObj.write(this_file_path)
+            candidats.append(user_data)
+        formatted_resumes_json = {
+            "candidatos": candidats
+        }
+    return formatted_resumes_json
+
+
 # def resume_filter(predictions_result, keyword, id, extracted_folder):
 #     filtered_resumes = []
 #     for pred_json in predictions_result:

@@ -88,28 +88,29 @@ def svm_create_model(X, y, data_split_type='holdout', to_pred=(False,)):
     print(classification_report(y_test, svc_pred))
     return (svc, k_fold_accuracy, precision, recall)
 
-def nb_create_model(X, y, data_split_type='holdout'):
+def nb_create_model(X_train, X_test, y_train, y_test, data_split_type='holdout'):
     nb = MultinomialNB()
-    
+
+    k_fold_accuracy = 0
     if data_split_type == 'kfold':
         k_fold = KFold(n_splits=10, random_state=1, shuffle=True)
-        kfold_scores = cross_val_score(nb, X, y, scoring='accuracy', cv=k_fold, n_jobs=6)
+        kfold_scores = cross_val_score(nb, X_train, y_train, scoring='accuracy', cv=k_fold, n_jobs=6)
         k_fold_accuracy = mean(kfold_scores)
         print(f'Kfold Accuracy: {mean(kfold_scores)}')
     
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=23)
+    # X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=23)
     
-    nb.fit(X, y)
+    nb.fit(X_train, y_train)
     
     nb_pred = nb.predict(X_test)
     nb_pred_proba = nb.predict_proba(X_test)
     
     # accuracy = accuracy_score(y_test, nb_pred)
-    # precision = precision_score(y_test, nb_pred, average='macro')
-    # recall = recall_score(y_test, nb_pred, average='macro')
+    precision = precision_score(y_test, nb_pred, average='macro')
+    recall = recall_score(y_test, nb_pred, average='macro')
     # print(f"Accuracy = {accuracy}")
-    # print(f"Precision = {precision}")
-    # print(f"Recall = {recall}")
+    print(f"Precision = {precision}")
+    print(f"Recall = {recall}")
     
     # print(f"Predict Proba = {nb_pred_proba[0]}")
     
@@ -151,12 +152,15 @@ word_vectorizer.fit(X)
 train_word_features = word_vectorizer.transform(X)
 
 
+X_train, X_test, y_train, y_test = train_test_split(train_word_features, y, test_size=0.3, random_state=23)
+
 over_sampler = RandomOverSampler(random_state=42)
-X_res, y_res = over_sampler.fit_resample(train_word_features, y)
+# X_res, y_res = over_sampler.fit_resample(train_word_features, y)
+X_res, y_res = over_sampler.fit_resample(X_train, y_train)
 
 
 # svc_model, accuracy, precision, recall = svm_create_model(X_res, y_res, data_split_type='kfold') # SVC
-nb_model, accuracy, precision, recall = nb_create_model(X_res, y_res, data_split_type='kfold') # NaiveBayes
+nb_model, accuracy, precision, recall = nb_create_model(X_res, X_test, y_res, y_test, data_split_type='kfold') # NaiveBayes
 
 
 print("Saving the model to the DB...")

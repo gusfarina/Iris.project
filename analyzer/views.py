@@ -267,6 +267,9 @@ def process_results(request, file_path):
 
     # Pega o caminho contendo um zip com todos os pdfs filtrados
     filtered_pdfs_path, filtered_resumes = text_preprocessing.resume_filter_UPDATED(user_json, keyword, user_data.id, extracted_folder, certainty)
+    
+    # Formata as predicoes sem filtro
+    formatted_resumes = text_preprocessing.prediction_formatter(user_json, user_data.id, extracted_folder)
 
     # print(f"Filtered Pdfs Path: {filtered_pdfs_path.split('/')}")
     with open(filtered_pdfs_path, 'rb') as file:
@@ -274,6 +277,7 @@ def process_results(request, file_path):
 
     # print(f'filtered_resumes: {filtered_resumes}')
     user_data.results = pickle.dumps(filtered_resumes)
+    user_data.raw_results = pickle.dumps(formatted_resumes)
     user_data.zipped_results = binary
     user_data.save()
 
