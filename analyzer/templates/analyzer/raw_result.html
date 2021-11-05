@@ -2,15 +2,14 @@
 {%block title%} Raw Result {%endblock%}
 {% load static %}
 {% block content %}
-RAW
 <div xmlns="http://www.w3.org/1999/html">
     <div style="text-align:center">
-        <h2 style="color: #421f83;">{{keyword}}</h2>
+        <h2 style="color: #421f83;">Unfiltered Results</h2>
     </div>
     <div class="separator separator-dashed my-5"></div>
     <div style="text-align:center">
         <div>
-            <a href="{% url 'download' %}" download="zip" type="application/zip"
+            <a href="{% url 'download' 'raw' %}" download="zip" type="application/zip"
                class="btn btn-primary font-weight-bolder">
                 <span class="svg-icon svg-icon-md"><svg
                         xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px"
@@ -75,8 +74,8 @@ RAW
                 title: 'Email',
             },
             {
-                field: 'telefone',
-                title: 'Phone',
+                field: 'cargo',
+                title: 'Cargo',
                 width: 150,
             },
             {

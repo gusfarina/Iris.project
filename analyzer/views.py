@@ -28,10 +28,13 @@ def clear_temp_dir():
             print('Failed to delete %s. Reason: %s' % (file_path, e))
 
 
-def download_file(request):
+def download_file(request, file_type="filtered"):
     user_id = request.session['user_key']
     # file_path = os.path.join("uploads", "zips", "{}_user_zip".format(user_id), "resumes{}.zip".format(user_id))
-    file_path = os.path.join("temp", f"{user_id}_results", f"resumes_{user_id}.zip")
+    if file_type == 'filtered':
+        file_path = os.path.join("temp", f"{user_id}_results", f"resumes_{user_id}.zip")
+    elif file_type == 'raw':
+        file_path = os.path.join("temp", f"{user_id}_raw_results", f"resumes_{user_id}.zip")
 
     # zipped_file = open(file_path, "wb")
     # to_file = file
@@ -66,6 +69,39 @@ class AiAnalyzer(generic.DetailView):
 
 
 def raw_result(request):
+    try:
+        is_logged = request.session['is_logged']
+    except KeyError as err:
+        return render(request, 'accounts/index.html')
+
+    template_name = 'analyzer/raw_result.html'
+    template = loader.get_template(template_name)
+
+    user_id = request.session['user_key']
+    try:
+        user_data = Data.objects.get(user_key=user_id)
+    except Data.DoesNotExist as data_unexist:
+        user_data = None
+        raise ValueError('Erro: {}'.format(data_unexist))
+    
+    # Creating path to store the data to predict
+    dir_name = Path(os.path.join("temp", f"{user_data.user_key}_raw_results"))
+    dir_name.mkdir(parents=True, exist_ok=True)
+
+    # Getting the path containing data to predict
+    file_path = os.path.join("temp", f"{user_data.user_key}_raw_results", f"resumes_{user_data.user_key}.zip")
+
+    # Writing the binary zipped user file to a zipfile
+    zipped_file = open(file_path, "wb+")
+    zipped_file.write(user_data.file)
+    zipped_file.close()
+
+    context = {
+        'page_title': 'Result',
+        'file_path' : file_path,
+        'keyword': user_data.key_word
+    }
+    return HttpResponse(template.render(context, request))
     return render(request, 'analyzer/raw_result.html')
 
 
@@ -236,7 +272,7 @@ def analyzer(request):
     user_data.raw_results = pickled_result
     user_data.save()
     process_results(request, file_path)
-    # clear_temp_dir()
+    clear_temp_dir()
     
 
 def process_results(request, file_path):
@@ -372,6 +408,7 @@ def get_raw_result(request):
         raise ValueError('Erro: {}'.format(data_unexist))
 
     user_json = pickle.loads(user_data.raw_results)
+    print(f"user_json: {user_json}")
     return HttpResponse(json.dumps(user_json['candidatos']), content_type='application/json')
 
 
