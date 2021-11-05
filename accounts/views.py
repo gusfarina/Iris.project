@@ -139,17 +139,22 @@ def profile(request):
     except UserAccount.DoesNotExist:
         user = UserAccount()
 
-    if a_psw != user.password:
-        messages.error(request, 'Senha antiga não conferem.')
-        return render(request, 'accounts/profile.html')
+    if a_psw:
+        if a_psw != user.password:
+            messages.error(request, 'Senha antiga não conferem.')
+            return render(request, 'accounts/profile.html')
 
-    if n_psw != n_psw2:
-        messages.error(request, 'Senhas não conferem.')
-        return render(request, 'accounts/profile.html')
+        if n_psw != n_psw2:
+            messages.error(request, 'Senhas não conferem.')
+            return render(request, 'accounts/profile.html')
 
-    if len(n_psw) < 6:
-        messages.error(request, 'Senha precisa ter 6 caracteres ou mais.')
-        return render(request, 'accounts/profile.html')
+        if len(n_psw) < 6:
+            messages.error(request, 'Senha precisa ter 6 caracteres ou mais.')
+            return render(request, 'accounts/profile.html')
+    else:
+        n_psw = user.password
+        print(f'SENHA {n_psw}')
+
 
     user.firstname = firstname
     user.lastname = lastname

@@ -65,6 +65,10 @@ class AiAnalyzer(generic.DetailView):
         return context
 
 
+def raw_result(request):
+    return render(request, 'analyzer/raw_result.html')
+
+
 def analyzer_store(request):
     """
     Recebendo os dados
@@ -353,6 +357,18 @@ def get_result(request):
     teste_json_item_1 = json.loads(user_json[0])
 
     return HttpResponse(json.dumps(teste_json_item_1['candidato']), content_type='application/json')
+
+
+def get_raw_result(request):
+    user_id = request.session['user_key']
+    try:
+        user_data = Data.objects.get(user_key=user_id)
+    except Data.DoesNotExist as data_unexist:
+        user_data = None
+        raise ValueError('Erro: {}'.format(data_unexist))
+
+    user_json = pickle.loads(user_data.raw_results)
+    return HttpResponse(json.dumps(user_json['candidatos']), content_type='application/json')
 
 
 # Cria json a partir do model
