@@ -2,6 +2,7 @@
 {%block title%} Analyzer {%endblock%}
 {% load static %}
 {% block content %}
+<h1 style="text-align: center;color: #421f83">Analyzer</h1><br>
 <form action="{% url 'analyzer_store' %}" method="post" enctype="multipart/form-data">
     {% csrf_token %}
     <div class="card-body">

@@ -97,7 +97,7 @@ def raw_result(request):
     zipped_file.close()
 
     context = {
-        'page_title': 'Result',
+        'page_title': 'Raw Result',
         'file_path' : file_path,
         'keyword': user_data.key_word
     }
