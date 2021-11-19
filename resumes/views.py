@@ -4,6 +4,9 @@ from .models import Resume
 from django.core.validators import validate_email
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
+from analyzer.models import Data
+import json
+from django.core import serializers
 
 
 def resumes(request):
@@ -12,10 +15,26 @@ def resumes(request):
     except KeyError as err:
         return render(request, 'accounts/index.html')
 
-    curriculos = Resume.objects.all()
-    return render(request, 'resumes/resumes.html', {
-        'curriculos': curriculos
-    })
+    return render(request, 'resumes/resumes.html')
+
+
+def get_resume(request):
+    try:
+        curriculos = Resume.objects.values()
+    except Data.DoesNotExist as data_unexist:
+        curriculos = None
+        raise ValueError('Erro: {}'.format(data_unexist))
+
+    print(f"RETORNO CURRICULOS: {curriculos}")
+
+    data_json = []
+    for i in curriculos:
+        obj = {}
+        for k, v in i.items():
+            obj[k] = v
+        data_json.append(obj)
+
+    return HttpResponse(json.dumps(data_json), content_type='application/json')
 
 
 def register_resume(request):

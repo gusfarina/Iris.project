@@ -23,7 +23,12 @@ def about(request):
     except KeyError as err:
         return render(request, 'accounts/index.html')
 
-    return render(request, 'home/about.html')
+    template_name = 'home/about.html'
+    template = loader.get_template(template_name)
+    context = {
+        'page_title': 'About',
+    }
+    return HttpResponse(template.render(context, request))
 
 
 def contact(request):
@@ -32,7 +37,12 @@ def contact(request):
     except KeyError as err:
         return render(request, 'accounts/index.html')
 
-    return render(request, 'home/contact.html')
+    template_name = 'home/contact.html'
+    template = loader.get_template(template_name)
+    context = {
+        'page_title': 'Contact',
+    }
+    return HttpResponse(template.render(context, request))
 
 
 def team(request):
@@ -41,4 +51,9 @@ def team(request):
     except KeyError as err:
         return render(request, 'accounts/index.html')
 
-    return render(request, 'home/team.html')
+    template_name = 'home/team.html'
+    template = loader.get_template(template_name)
+    context = {
+        'page_title': 'Team',
+    }
+    return HttpResponse(template.render(context, request))

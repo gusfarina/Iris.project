@@ -59,7 +59,7 @@
 
         <!--begin::Card body-->
         <div class="card-body px-0">
-            <form class="form" id="kt_form" method="POST" action="{% url 'profile' %}">
+            <form class="form" id="kt_form" method="POST" action="{% url 'profile' %}" enctype='multipart/form-data'>
                 {% csrf_token %}
                 <div class="tab-content">
                     <!--begin::Tab-->
@@ -448,8 +448,8 @@
                                              role="alert">
                                             <div class="alert-icon"><i class="flaticon-warning"></i></div>
                                             <div class="alert-text font-weight-bold">
-                                                Para ver as modicações, faça login novamente!<br>
-                                                'Username' e 'Email' são inalteráveis
+                                                To see the modifications, log in again!<br>
+                                                'Username' and 'Email' are unchangeable
                                             </div>
                                             <div class="alert-close">
                                                 <button type="button" class="close" data-dismiss="alert"

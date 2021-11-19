@@ -69,7 +69,7 @@ def register(request):
     psw = request.POST.get('psw')
     psw2 = request.POST.get('psw2')
     country = request.POST.get('country')
-    # avatar = request.IMAGE['avatar']
+    avatar = request.FILES['avatar']
 
     if not firstname or not lastname or not username or not phone or not email or not psw or not psw2 or not country:
         messages.error(request, 'No fields can be empty')
@@ -110,7 +110,7 @@ def register(request):
     user.email = email
     user.password = psw
     user.country = country
-    # user.avatar = avatar
+    user.avatar = avatar
     user.save()
     return HttpResponseRedirect(reverse('login'))
 
@@ -139,6 +139,11 @@ def profile(request):
     except UserAccount.DoesNotExist:
         user = UserAccount()
 
+    try:
+        avatar = request.FILES['profile_avatar']
+    except BaseException as err:
+        avatar = user.avatar.url
+
     if a_psw:
         if a_psw != user.password:
             messages.error(request, 'Senha antiga não conferem.')
@@ -153,14 +158,13 @@ def profile(request):
             return render(request, 'accounts/profile.html')
     else:
         n_psw = user.password
-        print(f'SENHA {n_psw}')
-
 
     user.firstname = firstname
     user.lastname = lastname
     user.phone = phone
     user.password = n_psw
     user.country = country
+    user.avatar = avatar
     user.user_key = user_id
     user.save()
 

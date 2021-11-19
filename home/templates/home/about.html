@@ -2,14 +2,48 @@
 {%block title%} About {%endblock%}
 {% load static %}
 {% block content %}
+<h2>
+    <big>
+        The Iris Project was a project created with the main purpose of facilitating the life of regular
+        users using machine learning models to do so.
+    </big>
+</h2>
+<br>
+<br>
+<br>
+<h2>
+    <big>
+        Our current machine learning model uses Multinomial Naive Bayes to facilitate resumes
+        classification from HR workers that have an high income of resumes from job applications.
+    </big>
+</h2>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.4.0/dist/confetti.browser.min.js"></script>
+<script>
+    var colors = ["#421f83", "##e83e8c"];
 
-<p>
-    The Iris Project was a project created with the main purpose of facilitating the life of regular 
-    users using machine learning models to do so.
-</p>
-<p>
-    Our current machine learning model uses Multinomial Naive Bayes to facilitate resumes 
-    classification from HR workers that have an high income of resumes from job applications.
-</p>
+function frame() {
+  confetti({
+    particleCount: 2,
+    angle: 60,
+    spread: 50,
+    origin: { x: 0 },
+    colors: colors,
+  });
+  confetti({
+    particleCount: 2,
+    angle: 120,
+    spread: 50,
+    origin: { x: 1 },
+    colors: colors,
+  });
 
+  if (Date.now() < Date.now() + 15000) {
+    requestAnimationFrame(frame);
+  }
+}
+
+window.onload = frame();
+
+
+</script>
 {% endblock %}

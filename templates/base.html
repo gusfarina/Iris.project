@@ -66,16 +66,16 @@
                                 <span class="menu-text">Raw Result</span>
                             </a>
                         </li>
-                        <li class="menu-section">
-                            <h4 class="menu-text">Admin Tools</h4>
-                            <i class="menu-icon ki ki-bold-more-hor icon-md"></i>
-                        </li>
-                        <li class="menu-item" aria-haspopup="true">
-                            <a href="{% url 'dados'%}" class="menu-link">
-                                <i class="menu-icon flaticon2-avatar"></i>
-                                <span class="menu-text">Users</span>
-                            </a>
-                        </li>
+<!--                        <li class="menu-section">-->
+<!--                            <h4 class="menu-text">Admin Tools</h4>-->
+<!--                            <i class="menu-icon ki ki-bold-more-hor icon-md"></i>-->
+<!--                        </li>-->
+<!--                        <li class="menu-item" aria-haspopup="true">-->
+<!--                            <a href="{% url 'dados'%}" class="menu-link">-->
+<!--                                <i class="menu-icon flaticon2-avatar"></i>-->
+<!--                                <span class="menu-text">Users</span>-->
+<!--                            </a>-->
+<!--                        </li>-->
                         <li class="menu-section">
                             <h4 class="menu-text">Others</h4>
                             <i class="menu-icon ki ki-bold-more-hor icon-md"></i>
@@ -136,7 +136,7 @@
                         </button>
                         <!--end::Aside Toggle-->
                         <!--begin::Logo-->
-                        <a href="#">
+                        <a href="{% url 'home' %}">
                             <img alt="Logo" src="{% static 'main/images/iris-logo-2.png' %}"
                                  class="logo-sticky max-h-60px"/>
                         </a>

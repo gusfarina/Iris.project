@@ -1,38 +1,112 @@
 {% extends 'base.html' %}
-{%block title%}  Resumes {%endblock%}
+{%block title%} Result {%endblock%}
+{% load static %}
 {% block content %}
-<div>
-    <table class="table table-success ">
-        <thead>
-        <tr>
-            <th>Full Name</th>
-            <th>Email</th>
-            <th>Phone</th>
-            <th>Desired job title</th>
-            <th>Resume</th>
-            <th>File</th>
-        </tr>
-        </thead>
-        <tbody>
-        {% for curriculo in curriculos %}
-        <tr>
-            <td>{{ curriculo.fullname }}</td>
-            <td>{{ curriculo.email }}</td>
-            <td>{{ curriculo.phone }}</td>
-            <td>{{ curriculo.job_title }}</td>
-            <th>
-                <a href="{{ curriculo.pdf.url }}">
-                    <button class="btn btn-dark" type="submit">View</button>
-                </a>
-            </th>
-            <th>
-                <a href="{{ curriculo.pdf.url }}" download="{{ curriculo.pdf.url }}" type="application/pdf">
-                <button class="btn btn-dark" type="submit">Download</button>
-                </a>
-            </th>
-        </tr>
-        {% endfor %}
-        </tbody>
-    </table>
+<div xmlns="http://www.w3.org/1999/html">
+    <div style="text-align:center">
+        <h2 style="color: #421f83;">Iris Registered Resumes</h2>
+    </div>
+    <div class="separator separator-dashed my-5"></div>
 </div>
+<br>
+<!--end::Search Form-->
+<div id="kt_datatable" class="datatable-brand"></div>
+
+<script>
+
+
+    jQuery(document).ready(function () {
+        var datatable = $('#kt_datatable').KTDatatable({
+
+            // datasource definition
+            data: {
+                type: 'remote',
+                source: {
+                    read: {
+                        url: "{% url 'get_resume' %}",
+                        method: 'GET',
+                    }
+
+                },
+                pageSize: 10,
+            },
+            // column sorting
+            sortable: true,
+            class: 'datatable-brand',
+            search: {
+                input: $('#kt_datatable_search_query'),
+                key: 'generalSearch'
+            },
+
+            pagination: true,
+            // columns definition
+            columns: [
+            {
+                field: 'fullname',
+                title: 'Full Name',
+            },
+            {
+                field: 'email',
+                title: 'Email',
+                width: 150,
+            },
+            {
+                field: 'phone',
+                title: 'Phone',
+            },
+            {
+                field: 'job_title',
+                title: 'Desired job title',
+                width: 150,
+            },
+            {
+                field: 'actions',
+                title: 'Actions',
+                sortable: false,
+                overflow: 'visible',
+                autoHide: false,
+                template: function(linha){
+                    return `\
+                    <a href="/uploads/${linha.pdf}" target="_blank" class="btn btn-sm btn-clean btn-icon mr-2" title="View">\
+                                <span class="svg-icon svg-icon-md svg-icon-primary">\
+<!--begin::Svg Icon | path:/var/www/preview.keenthemes.com/metronic/releases/2021-05-14-112058/theme/html/demo5/dist/../src/media/svg/icons/General/Visible.svg--><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
+    <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <rect x="0" y="0" width="24" height="24"/>
+        <path d="M3,12 C3,12 5.45454545,6 12,6 C16.9090909,6 21,12 21,12 C21,12 16.9090909,18 12,18 C5.45454545,18 3,12 3,12 Z" fill="#000000" fill-rule="nonzero" opacity="0.3"/>
+        <path d="M12,15 C10.3431458,15 9,13.6568542 9,12 C9,10.3431458 10.3431458,9 12,9 C13.6568542,9 15,10.3431458 15,12 C15,13.6568542 13.6568542,15 12,15 Z" fill="#000000" opacity="0.3"/>
+    </g>
+</svg><!--end::Svg Icon-->
+                                </span>\
+                            </a>\
+                            <a href="/uploads/${linha.pdf}" class="btn btn-sm btn-clean btn-icon mr-2"  type="application/pdf" download="/uploads/${linha.pdf}" title="Download">\
+                                <span class="svg-icon svg-icon-md svg-icon-primary">\
+                                    <!--begin::Svg Icon | path:/var/www/preview.keenthemes.com/metronic/releases/2021-05-14-112058/theme/html/demo5/dist/../src/media/svg/icons/Files/DownloadedFile.svg--><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
+    <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <polygon points="0 0 24 0 24 24 0 24"/>
+        <path d="M5.85714286,2 L13.7364114,2 C14.0910962,2 14.4343066,2.12568431 14.7051108,2.35473959 L19.4686994,6.3839416 C19.8056532,6.66894833 20,7.08787823 20,7.52920201 L20,20.0833333 C20,21.8738751 19.9795521,22 18.1428571,22 L5.85714286,22 C4.02044787,22 4,21.8738751 4,20.0833333 L4,3.91666667 C4,2.12612489 4.02044787,2 5.85714286,2 Z" fill="#000000" fill-rule="nonzero" opacity="0.3"/>
+        <path d="M14.8875071,11.8306874 L12.9310336,11.8306874 L12.9310336,9.82301606 C12.9310336,9.54687369 12.707176,9.32301606 12.4310336,9.32301606 L11.4077349,9.32301606 C11.1315925,9.32301606 10.9077349,9.54687369 10.9077349,9.82301606 L10.9077349,11.8306874 L8.9512614,11.8306874 C8.67511903,11.8306874 8.4512614,12.054545 8.4512614,12.3306874 C8.4512614,12.448999 8.49321518,12.5634776 8.56966458,12.6537723 L11.5377874,16.1594334 C11.7162223,16.3701835 12.0317191,16.3963802 12.2424692,16.2179453 C12.2635563,16.2000915 12.2831273,16.1805206 12.3009811,16.1594334 L15.2691039,12.6537723 C15.4475388,12.4430222 15.4213421,12.1275254 15.210592,11.9490905 C15.1202973,11.8726411 15.0058187,11.8306874 14.8875071,11.8306874 Z" fill="#000000"/>
+    </g>
+</svg><!--end::Svg Icon-->
+                                </span>\
+                            </a>`
+                }
+            },]
+        });
+
+
+        $('#kt_datatable_search_status').on('change', function () {
+            datatable.search($(this).val().toLowerCase(), 'Status');
+        });
+
+        $('#kt_datatable_search_type').on('change', function () {
+            datatable.search($(this).val().toLowerCase(), 'Type');
+        });
+
+        $('#kt_datatable_search_status, #kt_datatable_search_type').selectpicker();
+    });
+
+
+
+
+</script>
 {% endblock %}
