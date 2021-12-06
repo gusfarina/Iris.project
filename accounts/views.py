@@ -69,7 +69,11 @@ def register(request):
     psw = request.POST.get('psw')
     psw2 = request.POST.get('psw2')
     country = request.POST.get('country')
-    avatar = request.FILES['avatar']
+    try:
+        avatar = request.FILES['avatar']
+    except:
+        avatar = None
+
 
     if not firstname or not lastname or not username or not phone or not email or not psw or not psw2 or not country:
         messages.error(request, 'No fields can be empty')

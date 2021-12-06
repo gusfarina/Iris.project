@@ -82,27 +82,29 @@ def raw_result(request):
         user_data = Data.objects.get(user_key=user_id)
     except Data.DoesNotExist as data_unexist:
         user_data = None
-        raise ValueError('Erro: {}'.format(data_unexist))
-    
-    # Creating path to store the data to predict
-    dir_name = Path(os.path.join("temp", f"{user_data.user_key}_raw_results"))
-    dir_name.mkdir(parents=True, exist_ok=True)
 
-    # Getting the path containing data to predict
-    file_path = os.path.join("temp", f"{user_data.user_key}_raw_results", f"resumes_{user_data.user_key}.zip")
+    if user_data:
+        # Creating path to store the data to predict
+        dir_name = Path(os.path.join("temp", f"{user_data.user_key}_raw_results"))
+        dir_name.mkdir(parents=True, exist_ok=True)
 
-    # Writing the binary zipped user file to a zipfile
-    zipped_file = open(file_path, "wb+")
-    zipped_file.write(user_data.file)
-    zipped_file.close()
+        # Getting the path containing data to predict
+        file_path = os.path.join("temp", f"{user_data.user_key}_raw_results", f"resumes_{user_data.user_key}.zip")
 
-    context = {
-        'page_title': 'Raw Result',
-        'file_path' : file_path,
-        'keyword': user_data.key_word
-    }
-    return HttpResponse(template.render(context, request))
-    return render(request, 'analyzer/raw_result.html')
+        # Writing the binary zipped user file to a zipfile
+        zipped_file = open(file_path, "wb+")
+        zipped_file.write(user_data.file)
+        zipped_file.close()
+
+        context = {
+            'page_title': 'Raw Result',
+            'file_path' : file_path,
+            'keyword': user_data.key_word
+        }
+        return HttpResponse(template.render(context, request))
+
+    else:
+        return render(request, 'analyzer/error.html')
 
 
 def analyzer_store(request):
@@ -141,10 +143,12 @@ def analyzer_store(request):
     Clear 'temp' dir
     """
     clear_temp_dir()
-    analyzer(request)
-    # return HttpResponseRedirect(reverse('main:analyzer', args=['ResumeAnalyzer']))
-    return HttpResponseRedirect(reverse('result'))
-
+    try:
+        analyzer(request)
+        # return HttpResponseRedirect(reverse('main:analyzer', args=['ResumeAnalyzer']))
+        return HttpResponseRedirect(reverse('result'))
+    except BaseException as err:
+        return render(request, 'analyzer/error.html')
 
 def analyzer(request):
     print("Starting prediction function...")
@@ -336,7 +340,9 @@ def result(request):
         user_data = Data.objects.get(user_key=user_id)
     except Data.DoesNotExist as data_unexist:
         user_data = None
-        raise ValueError('Erro: {}'.format(data_unexist))
+        # raise ValueError('Erro: {}'.format(data_unexist))
+
+
     """
     dir_name = Path(os.path.join("uploads", "zips", "{}_user_zip".format(user_data.id)))
     dir_name.mkdir(parents=True, exist_ok=True)
@@ -349,27 +355,29 @@ def result(request):
     """
     # print(f"FILE PATH process_results: {file_path}")
 
-    
-    # Creating path to store the data to predict
-    dir_name = Path(os.path.join("temp", f"{user_data.user_key}_results"))
-    dir_name.mkdir(parents=True, exist_ok=True)
+    if user_data:
+        # Creating path to store the data to predict
+        dir_name = Path(os.path.join("temp", f"{user_data.user_key}_results"))
+        dir_name.mkdir(parents=True, exist_ok=True)
 
-    # Getting the path containing data to predict
-    file_path = os.path.join("temp", f"{user_data.user_key}_results", f"resumes_{user_data.user_key}.zip")
-    print(f'FILE PATH{file_path}')
+        # Getting the path containing data to predict
+        file_path = os.path.join("temp", f"{user_data.user_key}_results", f"resumes_{user_data.user_key}.zip")
+        print(f'FILE PATH{file_path}')
 
-    # Writing the binary zipped user file to a zipfile
-    zipped_file = open(file_path, "wb+")
-    zipped_file.write(user_data.zipped_results)
-    zipped_file.close()
+        # Writing the binary zipped user file to a zipfile
+        zipped_file = open(file_path, "wb+")
+        zipped_file.write(user_data.zipped_results)
+        zipped_file.close()
 
-    print(f"FILE PATH results: {file_path}")
-    context = {
-        'page_title': 'Result',
-        'file_path' : file_path,
-        'keyword': user_data.key_word
-    }
-    return HttpResponse(template.render(context, request))
+        print(f"FILE PATH results: {file_path}")
+        context = {
+            'page_title': 'Result',
+            'file_path': file_path,
+            'keyword': user_data.key_word
+        }
+        return HttpResponse(template.render(context, request))
+    else:
+        return render(request, 'analyzer/error.html')
 
 
 def get_result(request):
@@ -422,3 +430,6 @@ def dynamicTableFromModel(data):
             data_json.append(obj)
     return data_json
 
+
+def error(request):
+    return render(request, 'analyzer/error.html')
